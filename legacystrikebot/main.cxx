@@ -48,7 +48,7 @@ void sqlConnect() {
 
 bool userHasPerms(dpp::guild_member& user) {
     for (size_t i = 0; i < user.roles.size(); ++i) {
-        if ((user.roles.at(i) == (dpp::snowflake)986991989163688046) || (user.roles.at(i) == (dpp::snowflake)977338207018553354)) // || user.user_id == (dpp::snowflake)911276958762041406
+        if ((user.roles.at(i) == (dpp::snowflake)986991989163688046) || (user.roles.at(i) == (dpp::snowflake)977338207018553354) || (user.user_id == (dpp::snowflake)911276958762041406)) 
             return true;
     }
 
@@ -68,17 +68,11 @@ int main() {
         if (event.command.get_command_name() == "whitelist") {
             dpp::guild_member executor = event.command.member;
 
-            //dpp::channel channel = event.command.get_channel();
             if (userHasPerms(executor)) {
                 // get user
                 dpp::snowflake snowflake = std::get<dpp::snowflake>(event.get_parameter("user"));
-                //snowflake = snowflake.substr(2, snowflake.length() - 3);
                 dpp::user_identified user = bot.user_get_sync(snowflake);
 
-                //dpp::user* user = dpp::find_user(snowflake);
-                    //dpp::guild_member member = dpp::find_guild_member(973441288584192061, snowflake);
-
-                //member.roles
                 // get steamid
                 std::string steamid = std::get<std::string>(event.get_parameter("steamid3"));
                 i32 steamidInt = std::stoi(steamid.substr(5, steamid.length() - 6));
@@ -86,12 +80,6 @@ int main() {
                 // get ticket
                 i64 ticket = std::get<i64>(event.get_parameter("ticket"));
 
-                // extra info
-                //auto opt = event.get_parameter("param_name");
-                //std::string extra = (std::holds_alternative<std::string>(opt)) ? std::get<std::string>(event.get_parameter("extra") : std::string("");
-                // get extra info
-                //std::string extraInfo = (std::get<bool>(event.get_parameter("extra"))) ? std::get<std::string>(event.get_parameter("extra")) : std::string("");
-                //std::cout << std::get<std::string>(event.get_parameter("extra")) << std::endl;
                 sqlPstmt = sqlCon->prepareStatement("INSERT INTO whitelist(id, discordid, steamid, discord, steamurl, ticket, extra) VALUES(?,?,?,?,?,?,?)");
                 sqlPstmt->setInt(1, ++totalIds);
                 sqlPstmt->setInt64(2, snowflake);
