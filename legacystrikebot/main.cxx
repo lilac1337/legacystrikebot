@@ -48,7 +48,7 @@ void sqlConnect() {
 
 bool userHasPerms(dpp::guild_member& user) {
     for (size_t i = 0; i < user.roles.size(); ++i) {
-        if (user.roles.at(i) == (dpp::snowflake)986991989163688046 || user.roles.at(i) == (dpp::snowflake)977338207018553354) // || user.user_id == (dpp::snowflake)911276958762041406
+        if ((user.roles.at(i) == (dpp::snowflake)986991989163688046) || (user.roles.at(i) == (dpp::snowflake)977338207018553354)) // || user.user_id == (dpp::snowflake)911276958762041406
             return true;
     }
 
