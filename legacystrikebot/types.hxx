@@ -39,3 +39,9 @@ typedef uint_least64_t ul64;
 typedef uintmax_t um;
 
 typedef uintptr_t uptr;
+
+enum Types {
+	DiscordId,
+	SteamId,
+	Ticket
+};

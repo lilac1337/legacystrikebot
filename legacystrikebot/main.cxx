@@ -73,6 +73,12 @@ int main() {
                 dpp::snowflake snowflake = std::get<dpp::snowflake>(event.get_parameter("user"));
                 dpp::user_identified user = bot.user_get_sync(snowflake);
 
+                // add/remove roles
+                dpp::guild_member userMember = bot.guild_get_member_sync(event.command.guild_id, snowflake);
+
+                bot.guild_member_add_role_sync(event.command.guild_id, snowflake, 1048055985295593503);
+                bot.guild_member_remove_role_sync(event.command.guild_id, snowflake, 1053482690143342652);
+
                 // get steamid
                 std::string steamid = std::get<std::string>(event.get_parameter("steamid3"));
                 i32 steamidInt = std::stoi(steamid.substr(5, steamid.length() - 6));
@@ -97,16 +103,95 @@ int main() {
                 event.reply("u don't have perms for this!!!");
             }
         }
-        });
+
+        if (event.command.get_command_name() == "lookup") {
+            Types type = static_cast<Types>(std::get<i64>(event.get_parameter("type")));
+            std::string input = std::get<std::string>(event.get_parameter("input"));
+
+            dpp::user_identified user;// = bot.user_get_sync(snowflake);
+            i32 id;
+            i32 steamId; // = std::stoi(steamid.substr(5, steamid.length() - 6));
+            i32 ticket; //std::get<i64>(event.get_parameter("ticket"));
+
+            switch (type) {
+            case DiscordId:
+                sqlPstmt = sqlCon->prepareStatement("SELECT * FROM whitelist WHERE discordid = ?");
+                sqlPstmt->setInt64(1, std::stoll(input));
+                break;
+
+            case SteamId:
+                sqlPstmt = sqlCon->prepareStatement("SELECT * FROM whitelist WHERE steamid = ?");
+                sqlPstmt->setInt(1, std::stoi(input.substr(5, input.length() - 6)));
+                break;
+
+            case Ticket:
+                sqlPstmt = sqlCon->prepareStatement("SELECT * FROM whitelist WHERE ticket = ?");
+                sqlPstmt->setInt(1, std::stoi(input));
+                break;
+            }
+            
+            bool usingUser = true;
+
+            sqlResults = sqlPstmt->executeQuery();
+            if (sqlResults->next()) {
+                id = sqlResults->getInt(1);
+                try {
+                    user = bot.user_get_sync(sqlResults->getInt64(2));
+                }
+                catch (...) {
+                    usingUser = false;
+                }
+                
+                steamId = sqlResults->getInt(3);
+                ticket = sqlResults->getInt(5);
+
+                dpp::embed embed = dpp::embed().
+                    set_color(dpp::colors::pink).
+                    set_title("Whitelist Lookup").
+                    add_field(
+                        "User",
+                        ((usingUser) ? user.format_username() : sqlResults->getString(4).c_str()),
+                        true
+                    ).
+                    add_field(
+                        "SteamId",
+                        std::format("[U:1:{}]", steamId),
+                        true
+                    ).
+                    add_field(
+                        "Ticket",
+                        std::format("{}", ticket),
+                        true
+                    );
+
+                if (usingUser)
+                    embed.set_thumbnail(user.get_avatar_url());
+
+                event.reply(dpp::message(event.command.channel_id, embed).set_reference(event.command.id));
+            }
+            else {
+                event.reply("no one found!");
+            }
+        }
+    });
 
     bot.on_ready([&bot](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
-            dpp::slashcommand newcommand("whitelist", "whitelists a user", bot.me.id);
-            newcommand.add_option(dpp::command_option(dpp::co_user, "user", "a mention of the user", true));
-            newcommand.add_option(dpp::command_option(dpp::co_string, "steamid3", "steamid3 of the user", true));
-            newcommand.add_option(dpp::command_option(dpp::co_integer, "ticket", "ticket they were added in", true));
+            dpp::slashcommand whitelist("whitelist", "whitelists a user", bot.me.id);
+            whitelist.add_option(dpp::command_option(dpp::co_user, "user", "a mention of the user", true));
+            whitelist.add_option(dpp::command_option(dpp::co_string, "steamid3", "steamid3 of the user", true));
+            whitelist.add_option(dpp::command_option(dpp::co_integer, "ticket", "ticket they were added in", true));
 
-            bot.global_command_create(newcommand);
+            dpp::slashcommand lookup("lookup", "looks up a user", bot.me.id);
+            lookup.add_option(dpp::command_option(dpp::co_integer, "type", "the type used as input", true).
+                add_choice(dpp::command_option_choice("discord id", 0)).
+                add_choice(dpp::command_option_choice("steamid 3", 1)).
+                add_choice(dpp::command_option_choice("ticket", 2))
+            );
+            lookup.add_option(dpp::command_option(dpp::co_string, "input", "input", true));
+
+            bot.global_command_create(whitelist);
+            bot.global_command_create(lookup);
         }
         });
 
