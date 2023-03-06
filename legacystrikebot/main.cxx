@@ -143,7 +143,7 @@ int main() {
                 }
                 
                 steamId = sqlResults->getInt(3);
-                ticket = sqlResults->getInt(5);
+                ticket = sqlResults->getInt(6);
 
                 dpp::embed embed = dpp::embed().
                     set_color(dpp::colors::pink).
