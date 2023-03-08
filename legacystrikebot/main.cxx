@@ -175,6 +175,14 @@ int main() {
         }
     });
 
+    bot.on_channel_create([&bot](const dpp::channel_create_t& event) {
+        std::string* name = &event.created->name;
+
+        if (name->contains("ticket")) {
+            bot.message_create_sync(dpp::message(event.created->id, "Hello - **PLEASE** post ALL Steam accounts here please - banned ones included. \n**UNPRIVATE GAMES & HOURS** - a mod will be here eventually to help.\n\nIf you have a VAC / Gameban please state the game"));
+        }
+    });
+
     bot.on_ready([&bot](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
             dpp::slashcommand whitelist("whitelist", "whitelists a user", bot.me.id);
