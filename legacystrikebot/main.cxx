@@ -148,9 +148,10 @@ int main() {
                 dpp::embed embed = dpp::embed().
                     set_color(dpp::colors::pink).
                     set_title("Whitelist Lookup").
+                    set_url(sqlResults->getString(5).c_str()).
                     add_field(
                         "User",
-                        ((usingUser) ? user.format_username() : sqlResults->getString(4).c_str()),
+                        ((usingUser) ? user.get_mention() : sqlResults->getString(4).c_str()),
                         true
                     ).
                     add_field(
