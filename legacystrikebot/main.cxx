@@ -3,16 +3,16 @@
 #include <dpp/dpp.h>
 #include "types.hxx"
 
-#include "mysql_connection.h"
+#include <mysql_connection.h>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 
-std::string BOT_TOKEN = "MTA4MTM5MzM3Nzg1MDk1Mzc2MA.Gj8q4I.Ok5B0xfB9D3WKQcoUWZCHtwXjKL5P5_JvID_Z4";
+constexpr std::string_view BOT_TOKEN = "MTA4MTM5MzM3Nzg1MDk1Mzc2MA.Gj8q4I.Ok5B0xfB9D3WKQcoUWZCHtwXjKL5P5_JvID_Z4";
 
-const std::string server = "tcp://5.161.156.194";
-const std::string username = "csgoserver";
-const std::string password = "2numJ8TyXfL5pLZ";
+constexpr std::string_view server = "tcp://5.161.156.194";
+constexpr std::string_view username = "csgoserver";
+constexpr std::string_view password = "2numJ8TyXfL5pLZ";
 
 sql::Driver* sqlDriver;
 sql::Connection* sqlCon;
@@ -26,7 +26,7 @@ void sqlConnect() {
     try
     {
         sqlDriver = get_driver_instance();
-        sqlCon = sqlDriver->connect(server, username, password);
+        sqlCon = sqlDriver->connect(server.data(), username.data(), password.data());
     }
     catch (sql::SQLException e)
     {
@@ -46,9 +46,9 @@ void sqlConnect() {
     std::cout << "connected to sql :3" << std::endl;
 }
 
-bool userHasPerms(dpp::guild_member& user) {
+bool userHasPerms(const dpp::guild_member& user) {
     for (size_t i = 0; i < user.roles.size(); ++i) {
-        if ((user.roles.at(i) == (dpp::snowflake)986991989163688046) || (user.roles.at(i) == (dpp::snowflake)977338207018553354) || (user.user_id == (dpp::snowflake)911276958762041406)) 
+        if ((user.roles.at(i) == dpp::snowflake(986991989163688046)) || (user.roles.at(i) == dpp::snowflake(977338207018553354)) || (user.user_id == dpp::snowflake(911276958762041406))) 
             return true;
     }
 
@@ -60,7 +60,7 @@ int main() {
 
     sqlConnect();
 
-    dpp::cluster bot(BOT_TOKEN);
+    dpp::cluster bot(BOT_TOKEN.data());
 
     bot.on_log(dpp::utility::cout_logger());
 
@@ -193,9 +193,9 @@ int main() {
 
             dpp::slashcommand lookup("lookup", "looks up a user", bot.me.id);
             lookup.add_option(dpp::command_option(dpp::co_integer, "type", "the type used as input", true).
-                add_choice(dpp::command_option_choice("discord id", 0)).
-                add_choice(dpp::command_option_choice("steamid 3", 1)).
-                add_choice(dpp::command_option_choice("ticket", 2))
+                add_choice(dpp::command_option_choice("discord id", 0ll)).
+                add_choice(dpp::command_option_choice("steamid 3", 1ll)).
+                add_choice(dpp::command_option_choice("ticket", 2ll))
             );
             lookup.add_option(dpp::command_option(dpp::co_string, "input", "input", true));
 
