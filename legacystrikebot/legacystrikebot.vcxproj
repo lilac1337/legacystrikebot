@@ -114,6 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4099</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,10 +145,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="botHandler.cxx" />
+    <ClCompile Include="commands.cxx" />
     <ClCompile Include="main.cxx" />
+    <ClCompile Include="sql.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="types.hxx" />
+    <ClInclude Include="botHandler.hxx" />
+    <ClInclude Include="commands.hxx" />
+    <ClInclude Include="sql.hxx" />
+    <ClInclude Include="legacystrike.hxx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

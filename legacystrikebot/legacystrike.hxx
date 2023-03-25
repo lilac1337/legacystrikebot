@@ -1,6 +1,18 @@
 #pragma once
 
 #include <stdint.h>
+#include <iostream>
+#include <format>
+
+#include <dpp/dpp.h>
+#include <mysql_connection.h>
+#include <cppconn/driver.h>
+#include <cppconn/exception.h>
+#include <cppconn/prepared_statement.h>
+
+#include "botHandler.hxx"
+#include "commands.hxx"
+#include "sql.hxx"
 
 typedef int8_t i8;
 typedef int16_t i16;
