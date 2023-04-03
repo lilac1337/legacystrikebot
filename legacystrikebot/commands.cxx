@@ -1,5 +1,4 @@
 #include "commands.hxx"
-#include <dpp/dpp.h>
 
 bool userHasPerms(const dpp::guild_member& user) noexcept {
     for (size_t i = 0; i < user.roles.size(); ++i) {
@@ -8,6 +7,56 @@ bool userHasPerms(const dpp::guild_member& user) noexcept {
     }
 
     return false;
+}
+
+void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcommand_t& event) {
+    std::string steamUrl = std::get<std::string>(event.get_parameter("steamurl"));
+    std::string steamId;
+
+    if (steamUrl.contains("/steamcommunity.com/id/")) {
+        std::string vanity = steamUrl.substr(30, steamUrl.length() - 31);
+
+        cpr::Response r = cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1" },
+            cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"vanityurl", vanity} });
+
+        if (r.status_code > 299 || r.status_code < 200) {
+            event.reply("couldn't find the user qwq");
+
+            return;
+        }
+
+        json response = json::parse(r.text);
+
+        response.at("response").at("steamid").get_to(steamId);
+    }
+    else {
+        steamId = steamUrl.substr(36, steamUrl.length() - 37);
+    }
+
+    cpr::Response r = cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/" },
+        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamids", steamId.c_str()}});
+
+    json response = json::parse(r.text);
+
+    std::string steamName;
+    std::string steamAvatar;
+    std::string steamCreationDate;
+
+    response.at("response").at("players").at(0).at("personaname").get_to(steamName);
+    response.at("response").at("players").at(0).at("avatarfull").get_to(steamAvatar);
+    response.at("response").at("players").at(0).at("timecreated").get_to(steamCreationDate);
+
+    std::time_t time = std::stoi(steamCreationDate);
+    
+    dpp::embed embed = dpp::embed().
+        set_color(dpp::colors::pink).
+        set_title("User Check").
+        set_thumbnail(steamUrl).
+        set_image(steamAvatar).
+        add_field("Steam Name", steamName).
+        add_field("Steam Creation Date", std::ctime(&time));
+
+    event.reply(dpp::message(event.command.channel_id, embed).set_reference(event.command.id));
 }
 
 void legacystrike::commands::lookupUser(dpp::cluster& bot, const dpp::slashcommand_t& event) {

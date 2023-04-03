@@ -18,9 +18,27 @@
     <ClCompile Include="main.cxx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="botHandler.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="commands.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sql.cxx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="types.hxx">
+    <ClInclude Include="botHandler.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="commands.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sql.hxx">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="legacystrike.hxx">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

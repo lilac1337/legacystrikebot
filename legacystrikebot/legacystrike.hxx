@@ -3,12 +3,15 @@
 #include <stdint.h>
 #include <iostream>
 #include <format>
+#include <ctime>
 
 #include <dpp/dpp.h>
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
+#include <nlohmann/json.hpp>
+#include <cpr/cpr.h>
 
 #include "botHandler.hxx"
 #include "commands.hxx"

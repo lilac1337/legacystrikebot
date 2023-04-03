@@ -8,6 +8,9 @@ void legacystrike::botHandler::handleBot() {
     bot.on_log(dpp::utility::cout_logger());
 
     bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
+        if (event.command.get_command_name() == "check")
+            legacystrike::commands::checkUser(bot, event);
+
         if (event.command.get_command_name() == "lookup")
             legacystrike::commands::lookupUser(bot, event);
 
@@ -38,8 +41,12 @@ void legacystrike::botHandler::handleBot() {
             );
             lookup.add_option(dpp::command_option(dpp::co_string, "input", "input", true));
 
+            dpp::slashcommand checkUser("check", "checks a user", bot.me.id);
+            checkUser.add_option(dpp::command_option(dpp::co_string, "steamurl", "steam url of the user", true));
+
             bot.global_command_create(whitelist);
             bot.global_command_create(lookup);
+            bot.global_command_create(checkUser);
         }
         });
 
