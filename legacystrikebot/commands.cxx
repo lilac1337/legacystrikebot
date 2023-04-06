@@ -114,6 +114,8 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
     response.at("players").at(0).at("NumberOfVACBans").get_to(steamVacBans);
     response.at("players").at(0).at("NumberOfGameBans").get_to(steamGameBans);
     response.at("players").at(0).at("DaysSinceLastBan").get_to(steamDaysSinceBan);
+
+    delete r;
     
     dpp::embed embed = dpp::embed().
         set_color(dpp::colors::pink).
