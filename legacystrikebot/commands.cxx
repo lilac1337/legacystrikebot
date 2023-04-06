@@ -9,6 +9,30 @@ bool userHasPerms(const dpp::guild_member& user) noexcept {
     return false;
 }
 
+std::string& getSteamId(std::string& steamUrl) {
+    std::string steamId;
+
+    if (steamUrl.contains("/steamcommunity.com/id/")) {
+        std::string vanity = steamUrl.substr(30, steamUrl.length() - 31);
+
+        cpr::Response r = cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1" },
+            cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"vanityurl", vanity} });
+
+        if (r.status_code > 299 || r.status_code < 200) { 
+            throw 420;
+        }
+
+        json response = json::parse(r.text);
+
+        response.at("response").at("steamid").get_to(steamId);
+    }
+    else {
+        steamId = steamUrl.substr(36, steamUrl.length() - 37);
+    }
+
+    return steamId;
+}
+
 void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcommand_t& event) {
     std::string steamUrl = std::get<std::string>(event.get_parameter("steamurl"));
     std::string steamId;
@@ -16,26 +40,12 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
     cpr::Response* r = nullptr;
     json response;
 
-    if (steamUrl.contains("/steamcommunity.com/id/")) {
-        std::string vanity = steamUrl.substr(30, steamUrl.length() - 31);
-
-        r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1" },
-            cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"vanityurl", vanity} }));
-
-        if (r->status_code > 299 || r->status_code < 200) {
-            event.reply("couldn't find the user qwq");
-
-            return;
-        }
-        std::cout << r->text << std::endl;
-        response = json::parse(r->text);
-
-        response.at("response").at("steamid").get_to(steamId);
-
-        delete r;
+    try { 
+        steamId = std::format("{}", getSteamId(steamUrl)); 
     }
-    else {
-        steamId = steamUrl.substr(36, steamUrl.length() - 37);
+    catch (...) {
+        event.reply("couldn't find the user qwq");
+        return;
     }
 
     r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/" },
@@ -93,7 +103,7 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
     response = json::parse(r->text);
 
     response.at("players").at(0).at("NumberOfVACBans").get_to(steamVacBans);
-    response.at("players").at(0).at("NumberOfGameBans").get_to(steamGames);
+    response.at("players").at(0).at("NumberOfGameBans").get_to(steamGameBans);
     response.at("players").at(0).at("DaysSinceLastBan").get_to(steamDaysSinceBan);
     
     dpp::embed embed = dpp::embed().
