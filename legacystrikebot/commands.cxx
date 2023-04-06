@@ -12,6 +12,8 @@ bool userHasPerms(const dpp::guild_member& user) noexcept {
 std::string& getSteamId(std::string& steamUrl) {
     std::string steamId;
 
+    if (steamUrl[steamUrl.size() - 1] != '/') steamUrl.push_back('/');
+
     if (steamUrl.contains("/steamcommunity.com/id/")) {
         std::string vanity = steamUrl.substr(30, steamUrl.length() - 31);
 
@@ -81,7 +83,14 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
 
     response = json::parse(r->text);
 
-    response.at("response").at("game_count").get_to(steamGames);
+    try {
+        response.at("response").at("game_count").get_to(steamGames);
+    }
+    catch (...) {
+        event.reply("games are private ;w;");
+
+        return;
+    }
 
     for (size_t i = {}; i < steamGames; ++i) {
         static u32 appId;
