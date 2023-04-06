@@ -13,40 +13,88 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
     std::string steamUrl = std::get<std::string>(event.get_parameter("steamurl"));
     std::string steamId;
 
+    cpr::Response* r = nullptr;
+    json response;
+
     if (steamUrl.contains("/steamcommunity.com/id/")) {
         std::string vanity = steamUrl.substr(30, steamUrl.length() - 31);
 
-        cpr::Response r = cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1" },
-            cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"vanityurl", vanity} });
+        r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1" },
+            cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"vanityurl", vanity} }));
 
-        if (r.status_code > 299 || r.status_code < 200) {
+        if (r->status_code > 299 || r->status_code < 200) {
             event.reply("couldn't find the user qwq");
 
             return;
         }
-
-        json response = json::parse(r.text);
+        std::cout << r->text << std::endl;
+        response = json::parse(r->text);
 
         response.at("response").at("steamid").get_to(steamId);
+
+        delete r;
     }
     else {
         steamId = steamUrl.substr(36, steamUrl.length() - 37);
     }
 
-    cpr::Response r = cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/" },
-        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamids", steamId.c_str()}});
+    r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/" },
+        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamids", steamId.c_str()} }));
 
-    json response = json::parse(r.text);
+    response = json::parse(r->text);
 
-    std::string_view steamName;
-    std::string_view steamAvatar;
-    u32 steamCreationDate;
+    std::string steamName, steamAvatar;
+    u32 steamCreationDate = {}, steamLevel = {}, steamGames = {}, steamCsgoMinutes = {}, steamGameBans = {}, steamVacBans = {}, steamDaysSinceBan = {};
 
     response.at("response").at("players").at(0).at("personaname").get_to(steamName);
     response.at("response").at("players").at(0).at("avatarfull").get_to(steamAvatar);
     response.at("response").at("players").at(0).at("timecreated").get_to(steamCreationDate);
 
     std::time_t time = steamCreationDate;
+
+    delete r;
+
+    r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/IPlayerService/GetSteamLevel/v1" },
+        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamid", steamId.c_str()} }));
+
+    response = json::parse(r->text);
+
+    response.at("response").at("player_level").get_to(steamLevel);
+
+    delete r;
+
+    r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1" },
+        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamid", steamId.c_str()},
+                         {"include_appinfo", "false"}, {"include_played_free_games", "false"},
+                         {"appids_filter", ""}, {"include_free_sub", "false"},
+                         {"langauge", "en_us"}, {"include_extended_appinfo", "false"} }));
+
+    response = json::parse(r->text);
+
+    response.at("response").at("game_count").get_to(steamGames);
+
+    for (size_t i = {}; i < steamGames; ++i) {
+        static u32 appId;
+
+        response.at("response").at("games").at(i).at("appid").get_to(appId);
+
+        if (appId == 730) {
+            response.at("response").at("games").at(i).at("playtime_forever").get_to(steamCsgoMinutes);
+
+            break;
+        }
+    }
+
+    delete r;
+
+    r = new cpr::Response(cpr::Get(cpr::Url{ "https://api.steampowered.com/ISteamUser/GetPlayerBans/v1" },
+        cpr::Parameters{ {"key", "3034B76F089F729759DD45654215E876"}, {"steamids", steamId.c_str()}}));
+
+    response = json::parse(r->text);
+
+    response.at("players").at(0).at("NumberOfVACBans").get_to(steamVacBans);
+    response.at("players").at(0).at("NumberOfGameBans").get_to(steamGames);
+    response.at("players").at(0).at("DaysSinceLastBan").get_to(steamDaysSinceBan);
     
     dpp::embed embed = dpp::embed().
         set_color(dpp::colors::pink).
@@ -54,7 +102,11 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
         set_url(steamUrl.data()).
         set_thumbnail(steamAvatar.data()).
         add_field("Steam Name", steamName.data()).
-        add_field("Steam Creation Date", std::ctime(&time));
+        add_field("Steam Creation Date", std::ctime(&time)).
+        add_field("Steam Level", std::format("{}", steamLevel)).
+        add_field("Steam Bans", std::format("VACs: {}, Game Bans: {}, Days since last ban: {}", steamVacBans, steamGameBans, steamDaysSinceBan)).
+        add_field("Steam Games", std::format("{}", steamGames)).
+        add_field("CS:GO Playtime", std::format("{}h {}m", steamCsgoMinutes / 60, steamCreationDate % 60));
 
     event.reply(dpp::message(event.command.channel_id, embed).set_reference(event.command.id));
 }
