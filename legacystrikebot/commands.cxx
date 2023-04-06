@@ -38,22 +38,22 @@ void legacystrike::commands::checkUser(dpp::cluster& bot, const dpp::slashcomman
 
     json response = json::parse(r.text);
 
-    std::string steamName;
-    std::string steamAvatar;
-    std::string steamCreationDate;
+    std::string_view steamName;
+    std::string_view steamAvatar;
+    u32 steamCreationDate;
 
     response.at("response").at("players").at(0).at("personaname").get_to(steamName);
     response.at("response").at("players").at(0).at("avatarfull").get_to(steamAvatar);
     response.at("response").at("players").at(0).at("timecreated").get_to(steamCreationDate);
 
-    std::time_t time = std::stoi(steamCreationDate);
+    std::time_t time = steamCreationDate;
     
     dpp::embed embed = dpp::embed().
         set_color(dpp::colors::pink).
         set_title("User Check").
-        set_thumbnail(steamUrl).
-        set_image(steamAvatar).
-        add_field("Steam Name", steamName).
+        set_url(steamUrl.data()).
+        set_thumbnail(steamAvatar.data()).
+        add_field("Steam Name", steamName.data()).
         add_field("Steam Creation Date", std::ctime(&time));
 
     event.reply(dpp::message(event.command.channel_id, embed).set_reference(event.command.id));
