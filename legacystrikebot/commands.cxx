@@ -236,8 +236,10 @@ void legacystrike::commands::whitelistUser(dpp::cluster& bot, const dpp::slashco
     dpp::guild_member executor = event.command.member;
 
     if (userHasPerms(executor)) {
-        // get user
+        // get users
         dpp::snowflake snowflake = std::get<dpp::snowflake>(event.get_parameter("user"));
+        dpp::snowflake whitelisterSnowflake = event.command.usr.id;
+
         dpp::user_identified user = bot.user_get_sync(snowflake);
 
         // add/remove roles
@@ -254,7 +256,7 @@ void legacystrike::commands::whitelistUser(dpp::cluster& bot, const dpp::slashco
         i64 ticket = std::get<i64>(event.get_parameter("ticket"));
 
         try {
-            sqlConnection::sqlPstmt = sqlConnection::sqlCon->prepareStatement("INSERT INTO whitelist(id, discordid, steamid, discord, steamurl, ticket, extra) VALUES(?,?,?,?,?,?,?)");
+            sqlConnection::sqlPstmt = sqlConnection::sqlCon->prepareStatement("INSERT INTO whitelist(id, discordid, steamid, discord, steamurl, ticket, extra, whitelister) VALUES(?,?,?,?,?,?,?,?)");
             sqlConnection::sqlPstmt->setInt(1, ++sqlConnection::totalIds);
             sqlConnection::sqlPstmt->setInt64(2, snowflake);
             sqlConnection::sqlPstmt->setInt(3, steamidInt);
@@ -262,6 +264,7 @@ void legacystrike::commands::whitelistUser(dpp::cluster& bot, const dpp::slashco
             sqlConnection::sqlPstmt->setString(5, std::format("https://steamcommunity.com/profiles/{}", steamid));
             sqlConnection::sqlPstmt->setInt(6, ticket);
             sqlConnection::sqlPstmt->setString(7, "");
+            sqlConnection::sqlPstmt->setInt64(8, whitelisterSnowflake);
             sqlConnection::sqlPstmt->execute();
         }
         catch (sql::SQLException e) {
