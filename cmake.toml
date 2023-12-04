@@ -1,0 +1,33 @@
+# Reference: https://build-cpp.github.io/cmkr/cmake-toml
+[project]
+name = "legacystrikebot"
+
+[vcpkg]
+version = "2023.07.21"
+packages = [
+    "cpr"    
+]
+
+[find-package]
+cpr = {}
+
+[target.legacystrikebot]
+cmake-before = "set(CMAKE_EXPORT_COMPILE_COMMANDS ON)"
+type = "executable"
+sources = [
+    "src/**.hxx",
+    "src/**.cxx"
+]
+link-libraries = [
+    "mysqlcppconn",
+    "dpp",
+    "cpr::cpr"    
+]    
+gcc.private-compile-options = [
+    "-lpthread",
+    "-Wshadow",
+    "-Wall",
+    "-Wextra",
+    "-lz"
+]
+compile-features = ["cxx_std_23"]
